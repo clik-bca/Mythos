@@ -1,0 +1,17 @@
+{
+  "folder": "projects/aktif/card-editor",
+  "nama": "card-editor",
+  "package": "com.mythos.cardeditor",
+  "deskripsi": "Aplikasi editor kartu dengan pratinjau langsung dan ekspor PNG",
+  "status": "aktif",
+  "fitur": [
+    "Edit teks nama, nomor, alamat, keterangan",
+    "Sesuaikan ukuran font",
+    "Pratinjau langsung",
+    "Unduh kartu ke penyimpanan"
+  ],
+  "build": {
+    "tool": "build_apk",
+    "workflow": ".github/workflows/build-apk.yml"
+  }
+}

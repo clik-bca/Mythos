@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor Template Kartu — Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,Arial;background:#f1f4f9;color:#182235}
+main{max-width:1100px;margin:24px auto;padding:16px;display:grid;grid-template-columns:340px 1fr;gap:18px}
+.panel,.stage{background:white;border:1px solid #dce3ed;border-radius:16px;padding:18px;box-shadow:0 8px 24px #1725540c}
+h1{font-size:21px;margin:0 0 8px}p{color:#596579;font-size:13px;line-height:1.5}
+label{display:block;font-size:12px;font-weight:700;margin:13px 0 5px}
+input,textarea,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;font:inherit}
+button{border:0;border-radius:9px;padding:11px 14px;background:#334f9b;color:white;font-weight:700;cursor:pointer;margin:8px 5px 0 0}
+button.secondary{background:#e8edf5;color:#26344d}
+#canvasWrap{width:100%;overflow:auto;background:#e8edf5;border-radius:12px;padding:12px}
+canvas{display:block;max-width:100%;height:auto;background:white;border:1px solid #cbd5e1}
+.note{padding:10px;border-radius:9px;background:#fff7df;color:#755514;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:800px){main{grid-template-columns:1fr;margin:8px auto}.panel{order:1}.stage{order:2}}
+</style>
+</head>
+<body>
+<main>
+<section class="panel">
+<h1>Editor Template Kartu</h1>
+<p>Unggah gambar template non-resmi, lalu isi data. Teks akan ditampilkan di atas gambar dan dapat diatur posisinya.</p>
+<div class="note">Mode demo: hasil selalu diberi watermark “CONTOH / BUKAN DOKUMEN RESMI”. Jangan gunakan untuk meniru atau mengubah dokumen identitas pemerintah.</div>
+<label>Gambar template</label><input id="bgFile" type="file" accept="image/png,image/jpeg,image/webp">
+<label>Nama tampilan</label><input id="nama" placeholder="NAMA CONTOH">
+<label>Nomor referensi demo</label><input id="nomor" placeholder="DEMO-000001">
+<label>Alamat contoh</label><textarea id="alamat" rows="2" placeholder="Alamat contoh"></textarea>
+<label>Keterangan</label><input id="ket" placeholder="Keterangan tambahan">
+<label>Foto ilustrasi (opsional)</label><input id="photoFile" type="file" accept="image/png,image/jpeg,image/webp">
+<hr>
+<p><b>Posisi teks (persentase dari ukuran gambar)</b></p>
+<div class="grid">
+<div><label>Nama — X</label><input id="xNama" type="number" min="0" max="100" value="8"></div>
+<div><label>Nama — Y</label><input id="yNama" type="number" min="0" max="100" value="30"></div>
+<div><label>Nomor — X</label><input id="xNomor" type="number" min="0" max="100" value="8"></div>
+<div><label>Nomor — Y</label><input id="yNomor" type="number" min="0" max="100" value="42"></div>
+<div><label>Alamat — X</label><input id="xAlamat" type="number" min="0" max="100" value="8"></div>
+<div><label>Alamat — Y</label><input id="yAlamat" type="number" min="0" max="100" value="54"></div>
+<div><label>Keterangan — X</label><input id="xKet" type="number" min="0" max="100" value="8"></div>
+<div><label>Keterangan — Y</label><input id="yKet" type="number" min="0" max="100" value="68"></div>
+</div>
+<label>Ukuran teks</label><input id="fontSize" type="number" min="10" max="64" value="22">
+<label>Warna teks</label><input id="color" type="color" value="#172033">
+<button id="render">Perbarui preview</button>
+<button class="secondary" id="download">Unduh PNG</button>
+<button class="secondary" id="reset">Reset posisi</button>
+</section>
+<section class="stage">
+<h1>Live preview</h1><p>Preview diperbarui otomatis saat data atau posisi diubah.</p>
+<div id="canvasWrap"><canvas id="canvas" width="1000" height="630"></canvas></div>
+<p id="status">Belum ada gambar template. Kanvas demo akan digunakan sebagai latar.</p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id), c=$('canvas'),ctx=c.getContext('2d');
+let bg=null,photo=null;
+function loadImage(file,cb){if(!file)return;const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{cb(im);URL.revokeObjectURL(u)};im.src=u}
+function val(id){return $(''+id).value}
+function pct(id,dim){let n=Number(val(id));return Math.max(0,Math.min(100,n))/100*dim}
+function draw(){
+ const w=c.width,h=c.height;
+ ctx.clearRect(0,0,w,h);
+ if(bg){const s=Math.max(w/bg.width,h/bg.height),dw=bg.width*s,dh=bg.height*s;ctx.drawImage(bg,(w-dw)/2,(h-dh)/2,dw,dh)}
+ else{ctx.fillStyle='#e9f0fa';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#c3d0e4';ctx.strokeRect(18,18,w-36,h-36);ctx.fillStyle='#344b73';ctx.font='bold 30px Arial';ctx.fillText('TEMPLATE KARTU DEMO',35,65)}
+ const size=Math.max(10,Math.min(64,Number(val('fontSize'))||22));
+ ctx.fillStyle=val('color');ctx.font=`600 ${size}px Arial, sans-serif`;ctx.textBaseline='middle';
+ const items=[['nama','xNama','yNama'],['nomor','xNomor','yNomor'],['alamat','xAlamat','yAlamat'],['ket','xKet','yKet']];
+ for(const [field,x,y] of items){const text=val(field).trim();if(text)ctx.fillText(text,pct(x,w),pct(y,h),w-pct(x,w)-20)}
+ if(photo){const x=w*.78,y=h*.25,pw=w*.14,ph=h*.28;ctx.drawImage(photo,x,y,pw,ph)}
+ // Permanent demo marking
+ ctx.save();ctx.globalAlpha=.22;ctx.translate(w/2,h/2);ctx.rotate(-Math.PI/8);ctx.fillStyle='#b42318';ctx.textAlign='center';ctx.font='bold 76px Arial';ctx.fillText('CONTOH • BUKAN DOKUMEN RESMI',0,0);ctx.restore();
+ ctx.globalAlpha=1;ctx.textAlign='left';
+}
+$('bgFile').addEventListener('change',e=>loadImage(e.target.files[0],im=>{bg=im;$('status').textContent='Gambar template dimuat.';draw()}));
+$('photoFile').addEventListener('change',e=>loadImage(e.target.files[0],im=>{photo=im;draw()}));
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',draw));
+$('render').onclick=draw;
+$('download').onclick=()=>{draw();const a=document.createElement('a');a.download='template-kartu-demo.png';a.href=c.toDataURL('image/png');a.click()};
+$('reset').onclick=()=>{Object.entries({xNama:8,yNama:30,xNomor:8,yNomor:42,xAlamat:8,yAlamat:54,xKet:8,yKet:68}).forEach(([k,v])=>$(k).value=v);draw()};
+draw();
+</script>
+</body></html>
