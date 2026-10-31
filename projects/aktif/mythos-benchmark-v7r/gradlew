@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Gradle Wrapper - Version 8.7
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GRADLE_VERSION="8.7"
+GRADLE_DISTRIBUTION="https://services.gradle.org/distributions/gradle-8.7-bin.zip"
+GRADLE_HOME="${SCRIPT_DIR}/.gradle/wrapper/dists/gradle-${GRADLE_VERSION}"
+
+# Create gradle directory if it doesn't exist
+mkdir -p "${SCRIPT_DIR}/.gradle/wrapper/dists"
+
+# Check if gradle is already downloaded
+if [ ! -d "${GRADLE_HOME}" ]; then
+    echo "Downloading Gradle ${GRADLE_VERSION}..."
+    TEMP_ZIP="/tmp/gradle-${GRADLE_VERSION}.zip"
+    curl -L -o "${TEMP_ZIP}" "${GRADLE_DISTRIBUTION}"
+    unzip -q "${TEMP_ZIP}" -d "${SCRIPT_DIR}/.gradle/wrapper/dists/"
+    rm "${TEMP_ZIP}"
+fi
+
+# Find the actual gradle home
+GRADLE_HOME_DIR=$(find "${SCRIPT_DIR}/.gradle/wrapper/dists" -name "gradle-${GRADLE_VERSION}" -type d 2>/dev/null | head -1)
+if [ -z "${GRADLE_HOME_DIR}" ]; then
+    echo "Error: Could not find Gradle distribution"
+    exit 1
+fi
+
+GRADLE_BIN="${GRADLE_HOME_DIR}/bin/gradle"
+
+# Make gradle executable
+chmod +x "${GRADLE_BIN}"
+
+# Run gradle
+exec "${GRADLE_BIN}" "$@"
